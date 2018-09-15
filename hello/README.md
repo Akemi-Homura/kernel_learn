@@ -1,3 +1,7 @@
+---
+typora-copy-images-to: ipic
+---
+
 # 自定义系统调用
 
 #### 实现方案
@@ -18,7 +22,7 @@
 sudo cat /boot/System.map-`uname -r` | grep sys_call_table
 ```
 
-![系统调用表地址](/Users/quals/Library/Mobile Documents/com~apple~CloudDocs/Documents/实验报告/实验室/picture/系统调用表地址.png)
+![系统调用表地址](http://7xqsr4.com1.z0.glb.clouddn.com/2018-09-15-123426.jpg)
 
 图中可知 `0xc17c91c0` 为`sys_call_table`在内存中的地址
 
@@ -28,7 +32,7 @@ sudo cat /boot/System.map-`uname -r` | grep sys_call_table
 
 系统调用序号的使用情况存放在`/usr/include/i386-linux-gnu/asm/unistd_32.h`中
 
-![未使用的系统调用号](/Users/quals/Library/Mobile Documents/com~apple~CloudDocs/Documents/实验报告/实验室/picture/未使用的系统调用号.png)
+![未使用的系统调用号](http://7xqsr4.com1.z0.glb.clouddn.com/2018-09-15-123424.jpg)
 
 图中可知222和223号未使用
 
@@ -132,10 +136,10 @@ int main()
 
 #### 运行调试
 
-![编译-加载模块](/Users/quals/Library/Mobile Documents/com~apple~CloudDocs/Documents/实验报告/实验室/picture/编译-加载模块.png)
+![编译-加载模块](http://7xqsr4.com1.z0.glb.clouddn.com/2018-09-15-123427.jpg)
 
 编译，加载模块，运行测试程序，输出了该进程的pid
 
-![调试信息](/Users/quals/Library/Mobile Documents/com~apple~CloudDocs/Documents/实验报告/实验室/picture/调试信息.png)
+![调试信息](http://7xqsr4.com1.z0.glb.clouddn.com/2018-09-15-123425.jpg)
 
 使用`dmesg`查看输出信息，发现输出了"hello world\n"，系统调用被成功执行
