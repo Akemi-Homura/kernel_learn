@@ -1,7 +1,3 @@
----
-typora-copy-images-to: ipic
----
-
 # 自定义系统调用
 
 #### 实现方案
