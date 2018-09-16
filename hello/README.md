@@ -1,16 +1,18 @@
 # 自定义系统调用
 
-#### 实现方案
+## 方案一
+
+#### 1. 实现思路
 
 编写一个可加载模块，在可加载模块新建时修改`sys_call_table`中系统调用序号与服务例程的对应关系，将自定义的服务例程绑定一个系统调用序号。则可以在其他进程中通过系统调用序号执行自定义系统调用
 
-#### 测试环境
+#### 2. 测试环境
 
 `Ubuntu 16.04 i386 4.4.0-92-generic`
 
 ## 操作流程
 
-#### 查看sys_call_table的内存地址
+#### 1. 查看sys_call_table的内存地址
 
 `sys_call_table`的内存地址，存放在`/boot/System.map-${uname -r}`中，`uname -r`为内核版本号。使用以下命令查看
 
@@ -24,7 +26,7 @@ sudo cat /boot/System.map-`uname -r` | grep sys_call_table
 
 
 
-#### 查找未使用的系统调用序号
+#### 2. 查找未使用的系统调用序号
 
 系统调用序号的使用情况存放在`/usr/include/i386-linux-gnu/asm/unistd_32.h`中
 
@@ -32,7 +34,7 @@ sudo cat /boot/System.map-`uname -r` | grep sys_call_table
 
 图中可知222和223号未使用
 
-#### 编写可加载模块
+#### 3. 编写可加载模块
 
 ```c
 #include <linux/kernel.h>
@@ -100,7 +102,7 @@ MODULE_DESCRIPTION("a module for replace a syscall");
 
 该代码的作用是将223号系统调用绑定为自定义的系统调用，即输出"hello world\n"，并返回调用进程的pid
 
-#### 编写Makefile
+#### 4. 编写Makefile
 
 ```makefile
 obj-m:=hello.o
@@ -112,7 +114,7 @@ clean:
 	make -C  $(LINUX_KERNEL_PATH) M=$(CURRENT_PATH) clean
 ```
 
-#### 编写测试代码
+#### 5. 编写测试代码
 
 ```c
 #include<stdio.h>
@@ -130,7 +132,9 @@ int main()
 }
 ```
 
-#### 运行调试
+
+
+#### 6. 运行调试
 
 ![编译-加载模块](http://7xqsr4.com1.z0.glb.clouddn.com/2018-09-15-123427.jpg)
 
@@ -139,3 +143,113 @@ int main()
 ![调试信息](http://7xqsr4.com1.z0.glb.clouddn.com/2018-09-15-123425.jpg)
 
 使用`dmesg`查看输出信息，发现输出了"hello world\n"，系统调用被成功执行
+
+
+
+## 方案二
+
+#### 1. 实现思路
+
+下载内核源码，加入新的系统调用，编译安装新的内核
+
+
+
+#### 2. 测试环境
+
+`Ubuntu 16.04 i386 4.4.0-92-generic`
+
+
+
+## 操作流程
+
+#### 1. 下载内核源码
+
+方便起见，下载apt软件源中的内核源码
+
+查看可用的内核的源码
+
+`apt-cache search linux-source`
+
+![可用内核源码](http://7xqsr4.com1.z0.glb.clouddn.com/2018-09-16-145246.jpg)
+
+下载`4.4.0`的内核源码
+
+`sudo apt install linux-source-4.4.0`
+
+
+
+#### 2. 修改内核代码，增加系统调用
+
+在`include/linux/syscalls.h`文件中添加系统调用的函数声明
+
+```c
+asmlinkage long sys_hello(void);
+```
+
+在`kernel/sys.c`中添加系统调用的函数实现
+
+```c
+asmlinkage long sys_hello(void) {
+        printk("hello world xll\n");
+        return current->pid;
+}
+```
+
+在`arch/x86/entry/syscalls/syscall_64.tbl`中添加系统调用号
+
+```c
+378     i386    hello                   sys_hello
+```
+
+
+
+#### 3. 编译内核
+
+编译镜像，编译模块，安装模块，安装内核
+
+```shell
+make bzImage -j2 && make modules -j2 && make modules_install && make install
+```
+
+更新grup
+
+```shell
+update-grub
+```
+
+重新启动，检查是否成功安装
+
+![新的内核版本号](http://7xqsr4.com1.z0.glb.clouddn.com/2018-09-16-145248.jpg)
+
+内核版本号为下载的内核版本号，安装成功
+
+
+
+#### 4. 测试系统调用是否增加成功
+
+编写测试程序
+
+```c
+#include<stdio.h>
+#include<unistd.h>
+#include<stdlib.h>
+
+# define __NR_mycall 378
+
+int main()
+{
+        unsigned long x = 0;
+        x = syscall(__NR_mycall);        //测试223号系统调用
+        printf("Hello, %ld\n", x);
+        return 0;
+}
+```
+
+运行，查看调试信息
+
+![测试2](http://7xqsr4.com1.z0.glb.clouddn.com/2018-09-16-145247.jpg)
+
+![dmesg2](http://7xqsr4.com1.z0.glb.clouddn.com/2018-09-16-145249.jpg)
+
+成功输出进程pid，成功打印调试信息
+

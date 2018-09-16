@@ -8,7 +8,7 @@
 
 MODULE_LICENSE("Dual BSD/GPL");
 
-#define SYS_CALL_TABLE_ADDRESS 0xc17c91c0  //sys_call_table对应的地址
+#define SYS_CALL_TABLE_ADDRESS 0xc17d21c0  //sys_call_table对应的地址
 #define NUM 223  //系统调用号为223
 int orig_cr0;  //用来存储cr0寄存器原来的值
 unsigned long *sys_call_table_my=0;
